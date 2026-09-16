@@ -1,0 +1,87 @@
+### Health Check - Exito
+GET http://localhost:8080/health
+
+### ============================================================
+### PRODUCTOS
+### ============================================================
+
+### Listar productos (exito) - pagina 0, limite 10
+GET http://localhost:8080/api/productos?page=0&limit=10
+
+### Obtener producto por ID (exito)
+GET http://localhost:8080/api/productos/1
+
+### Obtener producto inexistente (error - 404 o 500 del API externo)
+GET http://localhost:8080/api/productos/99999
+
+### ============================================================
+### FAVORITOS
+### ============================================================
+
+### Listar favoritos (exito - lista vacia o con datos)
+GET http://localhost:8080/api/favoritos
+
+### Crear favorito (exito - 201 Created)
+POST http://localhost:8080/api/favoritos
+Content-Type: application/json
+
+{
+  "productoId": 1,
+  "notaPersonal": "Lo quiero para Navidad"
+}
+
+### Crear favorito sin productoId (error - 400 Validacion fallida)
+POST http://localhost:8080/api/favoritos
+Content-Type: application/json
+
+{
+  "notaPersonal": "Falta el productoId"
+}
+
+### Crear favorito con productoId negativo (error - 400 Validacion fallida)
+POST http://localhost:8080/api/favoritos
+Content-Type: application/json
+
+{
+  "productoId": -5,
+  "notaPersonal": "ID negativo no valido"
+}
+
+### Obtener favorito por ID (exito)
+GET http://localhost:8080/api/favoritos/1
+
+### Obtener favorito inexistente (error - 404 Not Found)
+GET http://localhost:8080/api/favoritos/99999
+
+### Actualizar favorito (exito - 200 OK)
+PUT http://localhost:8080/api/favoritos/1
+Content-Type: application/json
+
+{
+  "productoId": 1,
+  "notaPersonal": "Actualizado: ahora lo quiero para mi cumple"
+}
+
+### Actualizar favorito inexistente (error - 404 Not Found)
+PUT http://localhost:8080/api/favoritos/99999
+Content-Type: application/json
+
+{
+  "productoId": 1,
+  "notaPersonal": "No existe este favorito"
+}
+
+### Actualizar favorito con datos invalidos (error - 400 Validacion fallida)
+PUT http://localhost:8080/api/favoritos/1
+Content-Type: application/json
+
+{
+  "productoId": null,
+  "notaPersonal": "productoId es null"
+}
+
+### Eliminar favorito (exito - 204 No Content)
+DELETE http://localhost:8080/api/favoritos/1
+
+### Eliminar favorito inexistente (error - 404 Not Found)
+DELETE http://localhost:8080/api/favoritos/99999
