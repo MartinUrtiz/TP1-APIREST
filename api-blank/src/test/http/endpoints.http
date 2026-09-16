@@ -1,0 +1,93 @@
+### Health Check
+GET http://localhost:8080/health
+
+### ==============================
+### CATÁLOGO DE PRODUCTOS
+### ==============================
+
+### Listar productos (caso de éxito)
+GET http://localhost:8080/api/productos?limit=5&page=0
+
+### Listar productos página 2 (caso de éxito)
+GET http://localhost:8080/api/productos?limit=3&page=1
+
+### Obtener producto por ID (caso de éxito)
+GET http://localhost:8080/api/productos/1
+
+### Obtener producto por ID 5 (caso de éxito)
+GET http://localhost:8080/api/productos/5
+
+### Obtener producto inexistente (caso de error - falla al consumir API externa → 500)
+GET http://localhost:8080/api/productos/99999
+
+### ==============================
+### FAVORITOS
+### ==============================
+
+### Crear favorito 1 (caso de éxito → 201 Created)
+POST http://localhost:8080/api/favoritos
+Content-Type: application/json
+
+{
+  "productoId": 1,
+  "notaPersonal": "Lo quiero para Navidad"
+}
+
+### Crear favorito 2 (caso de éxito → 201 Created)
+POST http://localhost:8080/api/favoritos
+Content-Type: application/json
+
+{
+  "productoId": 5,
+  "notaPersonal": "Buen precio para regalar"
+}
+
+### Crear favorito sin productoId (caso de error → 400 Bad Request)
+POST http://localhost:8080/api/favoritos
+Content-Type: application/json
+
+{
+  "notaPersonal": "Falta el productoId"
+}
+
+### Crear favorito con productoId negativo (caso de error → 400 Bad Request)
+POST http://localhost:8080/api/favoritos
+Content-Type: application/json
+
+{
+  "productoId": -1,
+  "notaPersonal": "ID negativo"
+}
+
+### Listar todos los favoritos (caso de éxito)
+GET http://localhost:8080/api/favoritos
+
+### Obtener favorito por ID (caso de éxito)
+GET http://localhost:8080/api/favoritos/1
+
+### Obtener favorito inexistente (caso de error → 404 Not Found)
+GET http://localhost:8080/api/favoritos/999
+
+### Actualizar favorito (caso de éxito → 200 OK)
+PUT http://localhost:8080/api/favoritos/1
+Content-Type: application/json
+
+{
+  "productoId": 3,
+  "notaPersonal": "Cambié de opinión, lo quiero ahora"
+}
+
+### Actualizar favorito inexistente (caso de error → 404 Not Found)
+PUT http://localhost:8080/api/favoritos/999
+Content-Type: application/json
+
+{
+  "productoId": 1,
+  "notaPersonal": "No existe"
+}
+
+### Eliminar favorito (caso de éxito → 204 No Content)
+DELETE http://localhost:8080/api/favoritos/2
+
+### Eliminar favorito inexistente (caso de error → 404 Not Found)
+DELETE http://localhost:8080/api/favoritos/999
