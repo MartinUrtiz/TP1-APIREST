@@ -19,14 +19,19 @@ public class FavoritoResponseDTO {
     @Schema(description = "Fecha y hora en que se agregó como favorito")
     private LocalDateTime fechaCreacion;
 
+    @Schema(description = "ID de la lista a la que pertenece el favorito", example = "1")
+    private Long listaId;
+
     public FavoritoResponseDTO() {
     }
 
-    public FavoritoResponseDTO(Long id, Long productoId, String notaPersonal, LocalDateTime fechaCreacion) {
+    public FavoritoResponseDTO(Long id, Long productoId, String notaPersonal, LocalDateTime fechaCreacion,
+            Long listaId) {
         this.id = id;
         this.productoId = productoId;
         this.notaPersonal = notaPersonal;
         this.fechaCreacion = fechaCreacion;
+        this.listaId = listaId;
     }
 
     public Long getId() {
@@ -59,5 +64,13 @@ public class FavoritoResponseDTO {
 
     public void setFechaCreacion(LocalDateTime fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
+    }
+
+    public Long getListaId() {
+        return listaId;
+    }
+
+    public void setListaId(Long listaId) {
+        this.listaId = listaId;
     }
 }
