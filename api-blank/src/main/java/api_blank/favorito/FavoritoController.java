@@ -16,12 +16,17 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/favoritos")
-@Tag(name = "Favoritos", description = "CRUD de productos favoritos del usuario")
+@Tag(name = "Favoritos", description = "CRUD de productos favoritos del usuario. "
+        + "REQUIERE AUTENTICACIÓN: todas las operaciones exigen un token JWT válido "
+        + "(401 sin token). Los favoritos cuelgan de una lista, y la lista debe ser "
+        + "del usuario autenticado (403 si es ajena), salvo ADMIN.")
+@SecurityRequirement(name = "bearerAuth")
 public class FavoritoController {
 
     private final FavoritoService favoritoService;

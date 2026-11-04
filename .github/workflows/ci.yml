@@ -1,0 +1,32 @@
+name: CI
+
+# En cada push (y en cada PR) se compila el proyecto y se corre la suite
+# completa: *Test con Surefire y *IT con Failsafe (Testcontainers levanta
+# un PostgreSQL real y Flyway aplica todas las migraciones sobre esa base
+# limpia en cada corrida). No hay PostgreSQL local: todo pasa dentro del job.
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    name: Unit + integration tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: api-blank
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Build + Surefire (*Test) + Failsafe (*IT con Testcontainers)
+        run: ./mvnw --batch-mode --no-transfer-progress verify

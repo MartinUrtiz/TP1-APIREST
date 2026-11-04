@@ -11,12 +11,21 @@ public class ListaResponseDTO {
     @Schema(description = "Nombre de la lista", example = "Regalos")
     private String nombre;
 
+    @Schema(description = "ID del usuario dueño de la lista", example = "1")
+    private Long usuarioId;
+
     public ListaResponseDTO() {
     }
 
     public ListaResponseDTO(Long id, String nombre) {
         this.id = id;
         this.nombre = nombre;
+    }
+
+    public ListaResponseDTO(Long id, String nombre, Long usuarioId) {
+        this.id = id;
+        this.nombre = nombre;
+        this.usuarioId = usuarioId;
     }
 
     public Long getId() {
@@ -33,5 +42,13 @@ public class ListaResponseDTO {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    public Long getUsuarioId() {
+        return usuarioId;
+    }
+
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
     }
 }

@@ -1,0 +1,33 @@
+# Blueprint de Render: web service (Docker) + PostgreSQL gratuito.
+# Los datos sensibles van por variables de entorno (consigna 1):
+#  - DB_URL / DB_USER / DB_PASSWORD: conexión al PostgreSQL remoto
+#  - JWT_SECRET: secreto para firmar los JWT (generado por Render)
+# Ver README.md -> "Despliegue" para el paso a paso.
+services:
+  - type: web
+    name: api-blank
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: default
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION_MS
+        value: "3600000"
+      # Se completan con los datos del PostgreSQL creado abajo
+      # (Render no permite partir el connectionString en el blueprint)
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+databases:
+  - name: api-blank-db
+    plan: free
+    postgresVersion: 17

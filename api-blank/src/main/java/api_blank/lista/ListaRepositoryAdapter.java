@@ -5,17 +5,27 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
+import api_blank.usuario.UsuarioEntity;
+import api_blank.usuario.UsuarioJpaRepository;
+
 /**
  * Adapter del puerto {@link ListaRepository} respaldado por JPA/Hibernate.
  * Misma receta que FavoritoRepositoryAdapter: convertir y delegar.
+ *
+ * Al guardar, el dueño (usuario_id) se resuelve como referencia JPA al
+ * usuario existente: el id del dueño NUNCA llega del cliente, sino del
+ * usuario autenticado (ver ListaServiceImpl).
  */
 @Repository
 public class ListaRepositoryAdapter implements ListaRepository {
 
     private final ListaJpaRepository listaJpaRepository;
+    private final UsuarioJpaRepository usuarioJpaRepository;
 
-    public ListaRepositoryAdapter(ListaJpaRepository listaJpaRepository) {
+    public ListaRepositoryAdapter(ListaJpaRepository listaJpaRepository,
+                                  UsuarioJpaRepository usuarioJpaRepository) {
         this.listaJpaRepository = listaJpaRepository;
+        this.usuarioJpaRepository = usuarioJpaRepository;
     }
 
     @Override
@@ -46,14 +56,28 @@ public class ListaRepositoryAdapter implements ListaRepository {
         return listaJpaRepository.existsById(id);
     }
 
+    @Override
+    public List<Lista> findByUsuarioId(Long usuarioId) {
+        return listaJpaRepository.findByUsuarioId(usuarioId).stream()
+                .map(this::aDominio)
+                .toList();
+    }
+
     private ListaEntity aEntidad(Lista lista) {
         ListaEntity entidad = new ListaEntity();
         entidad.setId(lista.getId());
         entidad.setNombre(lista.getNombre());
+        if (lista.getUsuarioId() != null) {
+            UsuarioEntity duenio = usuarioJpaRepository.findById(lista.getUsuarioId())
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Usuario dueño inexistente: " + lista.getUsuarioId()));
+            entidad.setUsuario(duenio);
+        }
         return entidad;
     }
 
     private Lista aDominio(ListaEntity entidad) {
-        return new Lista(entidad.getId(), entidad.getNombre());
+        Long usuarioId = entidad.getUsuario() != null ? entidad.getUsuario().getId() : null;
+        return new Lista(entidad.getId(), entidad.getNombre(), usuarioId);
     }
 }

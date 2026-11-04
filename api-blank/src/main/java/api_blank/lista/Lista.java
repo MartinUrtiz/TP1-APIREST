@@ -11,12 +11,21 @@ public class Lista {
     @Schema(description = "Nombre de la lista", example = "Regalos")
     private String nombre;
 
+    @Schema(description = "ID del usuario dueño de la lista", example = "1")
+    private Long usuarioId;
+
     public Lista() {
     }
 
     public Lista(Long id, String nombre) {
         this.id = id;
         this.nombre = nombre;
+    }
+
+    public Lista(Long id, String nombre, Long usuarioId) {
+        this.id = id;
+        this.nombre = nombre;
+        this.usuarioId = usuarioId;
     }
 
     public Long getId() {
@@ -33,5 +42,13 @@ public class Lista {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    public Long getUsuarioId() {
+        return usuarioId;
+    }
+
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
     }
 }

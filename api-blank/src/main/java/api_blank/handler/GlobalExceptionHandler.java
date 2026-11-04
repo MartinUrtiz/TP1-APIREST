@@ -9,13 +9,46 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import api_blank.auth.AccesoDenegadoException;
+import api_blank.auth.CredencialesInvalidasException;
 import api_blank.favorito.FavoritoNoEncontradoException;
 import api_blank.lista.ListaConFavoritosException;
 import api_blank.lista.ListaNoEncontradaException;
 import api_blank.lista.ListasIgualesException;
+import api_blank.usuario.EmailYaRegistradoException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /** Login con credenciales inválidas -> 401 Unauthorized. */
+    @ExceptionHandler(CredencialesInvalidasException.class)
+    public ResponseEntity<ErrorResponse> manejarCredencialesInvalidas(CredencialesInvalidasException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    /**
+     * Recurso existente pero no perteneciente al usuario (y no es ADMIN)
+     * -> 403 Forbidden. Nunca 404: no se confunde "no existe" con "no es tuyo".
+     */
+    @ExceptionHandler(AccesoDenegadoException.class)
+    public ResponseEntity<ErrorResponse> manejarAccesoDenegado(AccesoDenegadoException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    /** Registro con un email que ya está en uso -> 409 Conflict. */
+    @ExceptionHandler(EmailYaRegistradoException.class)
+    public ResponseEntity<ErrorResponse> manejarEmailYaRegistrado(EmailYaRegistradoException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
 
     @ExceptionHandler(FavoritoNoEncontradoException.class)
     public ResponseEntity<ErrorResponse> manejarFavoritoNoEncontrado(FavoritoNoEncontradoException ex) {

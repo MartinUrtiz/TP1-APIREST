@@ -16,12 +16,17 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import api_blank.favorito.FavoritoResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/listas")
-@Tag(name = "Listas", description = "Listas que organizan los favoritos del usuario")
+@Tag(name = "Listas", description = "Listas que organizan los favoritos del usuario. "
+        + "REQUIERE AUTENTICACIÓN: todas las operaciones exigen un token JWT válido "
+        + "(401 sin token). Cada usuario sólo ve/modifica SUS listas (403 si es ajena), "
+        + "salvo un ADMIN que puede acceder a todas.")
+@SecurityRequirement(name = "bearerAuth")
 public class ListaController {
 
     private final ListaService listaService;
@@ -31,13 +36,17 @@ public class ListaController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar todas las listas", description = "Devuelve todas las listas de favoritos existentes")
+    @Operation(summary = "Listar mis listas",
+            description = "Devuelve las listas del usuario autenticado; un ADMIN ve todas. "
+                    + "Requiere token (401 sin él).")
     public ResponseEntity<List<ListaResponseDTO>> listar() {
         return ResponseEntity.ok(listaService.obtenerTodas());
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Obtener una lista por ID", description = "Devuelve una lista específica; 404 si no existe")
+    @Operation(summary = "Obtener una lista por ID",
+            description = "Devuelve una lista propia; 404 si no existe y 403 si es de otro usuario "
+                    + "(salvo ADMIN). Requiere token.")
     public ResponseEntity<ListaResponseDTO> obtenerPorId(
             @Parameter(description = "ID de la lista", example = "1")
             @PathVariable Long id) {
@@ -45,7 +54,9 @@ public class ListaController {
     }
 
     @GetMapping("/{id}/favoritos")
-    @Operation(summary = "Favoritos de una lista", description = "Devuelve los favoritos que pertenecen a la lista; 404 si la lista no existe")
+    @Operation(summary = "Favoritos de una lista",
+            description = "Devuelve los favoritos de una lista propia; 404 si no existe y "
+                    + "403 si es de otro usuario (salvo ADMIN). Requiere token.")
     public ResponseEntity<List<FavoritoResponseDTO>> favoritosDeLista(
             @Parameter(description = "ID de la lista", example = "1")
             @PathVariable Long id) {
@@ -53,7 +64,10 @@ public class ListaController {
     }
 
     @PostMapping
-    @Operation(summary = "Crear una lista", description = "Crea una nueva lista de favoritos y devuelve 201 Created con su ubicación")
+    @Operation(summary = "Crear una lista",
+            description = "Crea una nueva lista de favoritos a nombre del usuario autenticado "
+                    + "(el dueño nunca se manda en el body) y devuelve 201 Created con su "
+                    + "ubicación. Requiere token.")
     public ResponseEntity<ListaResponseDTO> crear(@Valid @RequestBody ListaDTO listaDTO) {
         ListaResponseDTO creada = listaService.crear(listaDTO);
         URI ubicacion = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -64,7 +78,10 @@ public class ListaController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar una lista", description = "Elimina una lista vacía (204); 409 Conflict si todavía tiene favoritos; 404 si no existe")
+    @Operation(summary = "Eliminar una lista",
+            description = "Elimina una lista propia vacía (204); 409 Conflict si todavía tiene "
+                    + "favoritos; 404 si no existe; 403 si es de otro usuario (salvo ADMIN). "
+                    + "Requiere token.")
     public ResponseEntity<Void> eliminar(
             @Parameter(description = "ID de la lista", example = "1")
             @PathVariable Long id) {
@@ -73,7 +90,10 @@ public class ListaController {
     }
 
     @PostMapping("/{origenId}/mover-favoritos")
-    @Operation(summary = "Mover favoritos entre listas", description = "Reasigna todos los favoritos de la lista origen a la lista destino y elimina la origen. Todo dentro de una única transacción: o se aplican ambas escrituras o ninguna")
+    @Operation(summary = "Mover favoritos entre listas",
+            description = "Reasigna todos los favoritos de la lista origen a la lista destino "
+                    + "y elimina la origen. Ambas listas deben ser propias (o el usuario ADMIN). "
+                    + "Todo dentro de una única transacción. Requiere token.")
     public ResponseEntity<MoverFavoritosResponseDTO> moverFavoritos(
             @Parameter(description = "ID de la lista origen (se elimina)", example = "1")
             @PathVariable Long origenId,
