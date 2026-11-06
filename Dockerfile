@@ -6,9 +6,12 @@
 FROM eclipse-temurin:25-jdk AS build
 WORKDIR /src
 
-# Primero las dependencias (capa cacheada): cambia sólo si cambia el pom
+# Primero las dependencias (capa cacheada): cambia sólo si cambia el pom.
+# mvnw exige también .mvn/wrapper/maven-wrapper.properties (si no, falla con
+# "cannot open ./.mvn/wrapper/maven-wrapper.properties"), por eso se copia .mvn.
 COPY api-blank/pom.xml ./pom.xml
 COPY api-blank/mvnw ./mvnw
+COPY api-blank/.mvn ./.mvn
 RUN chmod +x mvnw && ./mvnw -B -q dependency:go-offline || true
 
 COPY api-blank/src ./src
