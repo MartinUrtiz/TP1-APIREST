@@ -473,8 +473,15 @@ muestra el job `Unit + integration tests` con un ✓ verde o una ✗ roja. Al
 fallar, el log del paso *Build + Surefire + Failsafe* muestra el resumen
 (`Tests run: N, Failures: X, Errors: Y`) y, para cada prueba, la aserción que
 explotó; Maven también deja los informes en `api-blank/target/surefire-reports`
-y `api-blank/target/failsafe-reports`. Se verificó el pipeline en rojo (test
-roto a propósito: el job falla) y en verde al arreglarlo.
+y `api-blank/target/failsafe-reports`.
+
+**Evidencia (corridas reales):**
+
+| Situación | Corrida | Resultado |
+|---|---|---|
+| Corrida normal | [runs/42149159016](https://github.com/MartinUrtiz/TP1-APIREST/actions/runs/42149159016) | ✓ success — 22 + 27 tests, `BUILD SUCCESS` |
+| **Test roto a propósito** (commit `749be78`: `expected: <ADMIN> but was: <USER>`) | [runs/42149954395](https://github.com/MartinUrtiz/TP1-APIREST/actions/runs/42149954395) | ✗ **failure** — `Tests run: 22, Failures: 1` → el job falla y el push queda marcado en rojo |
+| **Arreglo** (commit `2d27093`: aserción restaurada) | [runs/42150075528](https://github.com/MartinUrtiz/TP1-APIREST/actions/runs/42150075528) | ✓ success — `Tests run: 22, Failures: 0` + `Tests run: 27, Failures: 0`, `BUILD SUCCESS` |
 
 Detalle importante: el wrapper `api-blank/mvnw` debe tener permiso de
 ejecución en el repo (`git update-index --chmod=+x api-blank/mvnw`), si no el
@@ -528,7 +535,7 @@ seguidos:
 ## Evidencia (TP3)
 
 - **Suite en verde localmente**: `./mvnw verify` → unitarios (Surefire) + integración (Failsafe) con Testcontainers y Flyway sobre PostgreSQL limpio.
-- **CI en GitHub Actions**: corrida exitosa del workflow `CI` en cada push (link en la sección 12); verificado también en rojo con un test roto a propósito y en verde al arreglarlo.
+- **CI en GitHub Actions**: corrida verde [runs/42149159016](https://github.com/MartinUrtiz/TP1-APIREST/actions/runs/42149159016); verificado en **rojo** con un test roto a propósito ([runs/42149954395](https://github.com/MartinUrtiz/TP1-APIREST/actions/runs/42149954395), `Failures: 1`) y de nuevo en **verde** al arreglarlo ([runs/42150075528](https://github.com/MartinUrtiz/TP1-APIREST/actions/runs/42150075528)).
 - **Migraciones V5 y V6 sin ediciones** posteriores a aplicadas (Flyway valida checksums en cada arranque; en CI corren contra base nueva en cada corrida).
 - **Endpoints protegidos**: `/api/listas` y `/api/favoritos` responden `401` sin token (o con token inválido/vencido) y `200` con uno válido; lista ajena `403`, ADMIN sobre lista ajena `200`.
 - **Despliegue**: URL pública con `GET /health` respondiendo `200` sin token, logs con las 6 migraciones aplicadas en la base remota y arranque sin errores (sección 13).
