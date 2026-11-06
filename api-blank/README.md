@@ -508,6 +508,16 @@ seguidos:
    - `JWT_SECRET` = un string aleatorio de ≥ 32 caracteres (en el blueprint
      Render lo genera solo con `generateValue: true`);
    - `JWT_EXPIRATION_MS` = `3600000`.
+
+   > ⚠️ **El host del `DB_URL` debe ser el interno** (`dpg-xxxx`, sin el
+   > sufijo `.virginia-postgres.render.com`). Con el host *external* la app
+   > que corre dentro de Render no llega a completar el handshake: los logs
+   > muestran `PSQLException: The connection attempt failed ... EOFException
+   > at doAuthentication` y el deploy termina en `update_failed`. El host
+   > externo sirve para conectarse desde tu máquina (y aun así exige
+   > `sslmode=require`, porque responde `FATAL: SSL/TLS required` si no se
+   > usa TLS). Se cambió `DB_URL` con
+   > `PUT /v1/services/{id}/env-vars/{key}` de la API de Render.
 4. **Deploy**: *Deploy*. En los logs del servicio tenés que ver:
    - `Successfully applied 6 migrations ... now at version v6` (Flyway corrió
      las migraciones **en la base remota**, incluidas V5 y V6);
@@ -522,6 +532,53 @@ seguidos:
    evidencia queda en los logs de la corrida y en las capturas de los pasos 4
    y 5. Variables de entorno y base quedan configuradas para levantarlo de
    nuevo cuando haga falta.
+
+### Resultado real (evidencia del despliegue)
+
+**URL pública: https://api-blank.onrender.com**
+Recurso: servicio `srv-dbmjrfetlv9c73b7llog` (rama `TP3`, Docker) + Postgres
+`dpg-dbmjon7f3r2c73as3o20-a` (free, PG 17, virginia). Último deploy:
+`dep-dbmkia6tlv9c73b9kic0` → estado **`live`**.
+
+**Logs de la app (Flyway sobre la base remota + arranque limpio):**
+
+```
+03:29:04 INFO  Database: jdbc:postgresql://dpg-dbmjon7f3r2c73as3o20-a:5432/api_blank (PostgreSQL 17.11)
+03:29:04 INFO  Schema history table "public"."flyway_schema_history" does not exist yet
+03:29:08 INFO  Migrating schema "public" to version "1 - create favoritos"
+03:29:09 INFO  Migrating schema "public" to version "2 - create listas"
+03:29:10 INFO  Migrating schema "public" to version "3 - add lista id a favoritos"
+03:29:10 INFO  Migrating schema "public" to version "4 - lista id obligatorio"
+03:29:11 INFO  Migrating schema "public" to version "5 - create usuarios"
+03:29:11 INFO  Migrating schema "public" to version "6 - add usuario id a listas"
+03:29:11 INFO  Successfully applied 6 migrations to schema "public", now at version v6 (execution time 00:00.902s)
+03:29:59 INFO  Tomcat started on port 8080 (http) with context path '/'
+03:29:59 INFO  Started ApiBlankApplication in 117.301 seconds (process running for 127.301)
+```
+
+Las 6 migraciones corrieron **contra la base remota vacía** (la tabla de
+historial no existía) y el arranque no tiene errores.
+
+**Verificación HTTP contra la URL pública:**
+
+| # | Request | Resultado |
+|---|---|---|
+| 1 | `GET /health` (sin token) | **200** → `{"status":"ok","service":"api-blank"}` |
+| 2 | `POST /api/auth/registro` (`email` + `password`) | **200** → `{"id":2,"email":"evidencia.tp3...@example.com","rol":"USER"}` |
+| 3 | `POST /api/auth/login` (credenciales válidas) | **200** → `{"token":"...","id":2,"email":"...","rol":"USER","tipo":"..."}` |
+| 4 | `POST /api/auth/login` (password incorrecta, ≥6 caracteres) | **401** → `{"mensaje":"Email o contraseña incorrectos","status":401}` |
+| 5 | `GET /api/listas` **sin** token | **401** → `{"mensaje":"Se requiere un token JWT válido (header Authorization: Bearer <token>)","status":401}` |
+| 6 | `GET /api/listas` **con** `Authorization: Bearer <token>` | **200** (lista vacía del usuario autenticado) |
+
+> Nota: un login con una password de **menos de 6 caracteres** devuelve
+> `400 Validación fallida` (validación de formato antes de autenticar); el
+> `401` de credenciales inválidas se ve con una password bien formada pero
+> errónea, como en el caso 4.
+
+> Los `403` por propiedad (lista ajena) y `200` de ADMIN sobre lista ajena
+> están cubiertos por la suite de integración (`ListaPropiaIT`) y por la
+> evidencia local del TP3; en la URL pública se muestran los casos de
+> autenticación (401/200) pedidos por la consigna.
 
 ## Evidencia (TP2)
 
@@ -538,4 +595,4 @@ seguidos:
 - **CI en GitHub Actions**: corrida verde [runs/42149159016](https://github.com/MartinUrtiz/TP1-APIREST/actions/runs/42149159016); verificado en **rojo** con un test roto a propósito ([runs/42149954395](https://github.com/MartinUrtiz/TP1-APIREST/actions/runs/42149954395), `Failures: 1`) y de nuevo en **verde** al arreglarlo ([runs/42150075528](https://github.com/MartinUrtiz/TP1-APIREST/actions/runs/42150075528)).
 - **Migraciones V5 y V6 sin ediciones** posteriores a aplicadas (Flyway valida checksums en cada arranque; en CI corren contra base nueva en cada corrida).
 - **Endpoints protegidos**: `/api/listas` y `/api/favoritos` responden `401` sin token (o con token inválido/vencido) y `200` con uno válido; lista ajena `403`, ADMIN sobre lista ajena `200`.
-- **Despliegue**: URL pública con `GET /health` respondiendo `200` sin token, logs con las 6 migraciones aplicadas en la base remota y arranque sin errores (sección 13).
+- **Despliegue en Render**: URL pública **https://api-blank.onrender.com** → `GET /health` responde `200` sin token, logs con `Successfully applied 6 migrations ... now at version v6` sobre la base remota y arranque sin errores (`Started ApiBlankApplication`); `GET /api/listas` da `401` sin token y `200` con `Bearer` (tabla de la sección 13).
