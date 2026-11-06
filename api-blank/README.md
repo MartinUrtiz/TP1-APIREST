@@ -550,8 +550,9 @@ seguidos:
 
 **URL pública: https://api-blank.onrender.com**
 Recurso: servicio `srv-dbmjrfetlv9c73b7llog` (rama `TP3`, Docker) + Postgres
-`dpg-dbmjon7f3r2c73as3o20-a` (free, PG 17, virginia). Último deploy:
-`dep-dbmkia6tlv9c73b9kic0` → estado **`live`**.
+`dpg-dbmjon7f3r2c73as3o20-a` (free, PG 17, virginia). El deploy lo dispara
+Render en cada push a la rama `TP3` (auto-deploy); el último quedó en estado
+**`live`**.
 
 **Logs de la app (Flyway sobre la base remota + arranque limpio):**
 
@@ -577,11 +578,14 @@ historial no existía) y el arranque no tiene errores.
 | # | Request | Resultado |
 |---|---|---|
 | 1 | `GET /health` (sin token) | **200** → `{"status":"ok","service":"api-blank"}` |
-| 2 | `POST /api/auth/registro` (`email` + `password`) | **200** → `{"id":2,"email":"evidencia.tp3...@example.com","rol":"USER"}` |
-| 3 | `POST /api/auth/login` (credenciales válidas) | **200** → `{"token":"...","id":2,"email":"...","rol":"USER","tipo":"..."}` |
+| 2 | `POST /api/auth/registro` (`email` + `password`) | **201** → `{"id":3,"email":"swagger.tp3...@example.com","rol":"USER"}` |
+| 3 | `POST /api/auth/login` (credenciales válidas) | **200** → `{"token":"eyJ...","id":3,"email":"...","rol":"USER","tipo":"Bearer"}` |
 | 4 | `POST /api/auth/login` (password incorrecta, ≥6 caracteres) | **401** → `{"mensaje":"Email o contraseña incorrectos","status":401}` |
 | 5 | `GET /api/listas` **sin** token | **401** → `{"mensaje":"Se requiere un token JWT válido (header Authorization: Bearer <token>)","status":401}` |
-| 6 | `GET /api/listas` **con** `Authorization: Bearer <token>` | **200** (lista vacía del usuario autenticado) |
+| 6 | `GET /api/listas` **con** `Authorization: Bearer <token>` | **200** → `[]` (lista vacía del usuario autenticado) |
+| 7 | `GET /api-docs` (documento OpenAPI) | **200** → `{"openapi":"3.1.0","info":{"title":"API Blank - Favoritos y Listas"...}` con `bearerAuth` |
+| 8 | `GET /api-docs/swagger-config` (lo que consulta la UI) | **200** → `{"url":"/api-docs",...}` |
+| 9 | `GET /swagger-ui.html` | **200** (Swagger UI) |
 
 > Nota: un login con una password de **menos de 6 caracteres** devuelve
 > `400 Validación fallida` (validación de formato antes de autenticar); el
@@ -608,4 +612,5 @@ historial no existía) y el arranque no tiene errores.
 - **CI en GitHub Actions**: corrida verde [runs/42149159016](https://github.com/MartinUrtiz/TP1-APIREST/actions/runs/42149159016); verificado en **rojo** con un test roto a propósito ([runs/42149954395](https://github.com/MartinUrtiz/TP1-APIREST/actions/runs/42149954395), `Failures: 1`) y de nuevo en **verde** al arreglarlo ([runs/42150075528](https://github.com/MartinUrtiz/TP1-APIREST/actions/runs/42150075528)).
 - **Migraciones V5 y V6 sin ediciones** posteriores a aplicadas (Flyway valida checksums en cada arranque; en CI corren contra base nueva en cada corrida).
 - **Endpoints protegidos**: `/api/listas` y `/api/favoritos` responden `401` sin token (o con token inválido/vencido) y `200` con uno válido; lista ajena `403`, ADMIN sobre lista ajena `200`.
+- **Swagger actualizado y verificado en producción**: `GET https://api-blank.onrender.com/api-docs` → `200` con `openapi: 3.1.0`, el esquema `bearerAuth` y los grupos **Autenticación** (`/api/auth/registro`, `/api/auth/login`) como públicos, mientras que **Favoritos** y **Listas** aparecen con `security: [{"bearerAuth": []}]`; `GET /swagger-ui.html` → `200` y `/api-docs/swagger-config` → `{"url":"/api-docs"}` (la UI carga el documento correcto).
 - **Despliegue en Render**: URL pública **https://api-blank.onrender.com** → `GET /health` responde `200` sin token, logs con `Successfully applied 6 migrations ... now at version v6` sobre la base remota y arranque sin errores (`Started ApiBlankApplication`); `GET /api/listas` da `401` sin token y `200` con `Bearer` (tabla de la sección 13).
