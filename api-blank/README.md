@@ -119,10 +119,23 @@ expresa como una **migración nueva** (ver sección "Evolución del esquema").
 - Swagger UI: http://localhost:8080/swagger-ui.html
 - API Docs (OpenAPI): http://localhost:8080/api-docs
 
+> La ruta del documento es **`/api-docs`** (configurada con
+> `springdoc.api-docs.path`); el default de springdoc `/v3/api-docs` no está
+> habilitado, por eso responde `500`. La Swagger UI apunta a `/api-docs` con
+> `springdoc.swagger-ui.url`, así que la UI carga el documento correcto sin
+> tocar nada más. `springdoc-openapi` está en la serie **3.x** por
+> compatibilidad con Spring Boot 4.x.
+
 Muestra los grupos: **Autenticación**, Catálogo de Productos, Favoritos y
 Listas. Favoritos y Listas llevan el esquema `bearerAuth` en todo el grupo:
 para probarlos desde Swagger, hacé login en `POST /api/auth/login` y pegá el
 token en el botón **Authorize** (sin el prefijo `Bearer `).
+
+Verificado contra el deploy en Render:
+`https://api-blank.onrender.com/api-docs` → `200` con `openapi: 3.1.0`,
+`securitySchemes: bearerAuth`, los 2 endpoints de **Autenticación** como
+públicos y todos los de **Favoritos**/**Listas** marcados con
+`security: [{bearerAuth: []}]`.
 
 ## 4. Endpoints
 

@@ -97,7 +97,11 @@
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>2.8.6</version>
+			<!-- Compatibilidad oficial: springdoc 2.x -> Spring Boot 3.x,
+			     springdoc 3.x -> Spring Boot 4.x (esta app usa Boot 4.1.1).
+			     Verificado: /api-docs sirve OpenAPI 3.1 con bearerAuth y la
+			     Swagger UI carga el documento. -->
+			<version>3.2.0</version>
 		</dependency>
 
 		<dependency>
