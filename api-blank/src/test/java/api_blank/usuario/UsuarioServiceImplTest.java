@@ -76,7 +76,8 @@ class UsuarioServiceImplTest {
         ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).save(captor.capture());
 
-        assertEquals(RolUsuario.USER, captor.getValue().getRol());
+        // EVIDENCIA CI: aserción rota a propósito (se revierte en el próximo commit)
+        assertEquals(RolUsuario.ADMIN, captor.getValue().getRol());
     }
 
     @Test
